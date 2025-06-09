@@ -1,9 +1,9 @@
-﻿@page "/Registro/Index"
+﻿@page "/Aportes/Index"
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
 
 
-<PageTitle> Registro </PageTitle>
+<PageTitle> Consulta de aportes </PageTitle>
 <div class="container mt-3">
     <div class="card shadow p-0">
         <div class="card-header text-center bg-primary text-white">
@@ -25,11 +25,14 @@
                 </div>
             </div>
 
-            <div class="row align-items-center">
+            <div class="row align-items-end mb-1">
                 <div class="col-3">
                     <select class="form-select" >
                         <option value="" selected>Todos</option>
                         <option value="Id">Id</option>
+                        <option value="Nombres">Nombre</option>
+                        <option value="Fecha">Fecha</option>
+                        <option value="Monto">Monto</option>
                     </select>
                 </div>
 
@@ -41,10 +44,20 @@
                         </button>
                     </div>
                 </div>
+                <table class="table table-hover table-bordered text-center mt-4">
+                    <thead class="table table-striped text-black">
+                        <tr>
+                            <th class="fw-semibold">Id</th>
+                            <th class="fw-semibold">Fecha</th>
+                            <th class="fw-semibold">Nombres</th>
+                            <th class="fw-semibold">Monto</th>
+                        </tr>
+                    </thead>
+                </table>
+
+
             </div>
         </div>
-
-        
     </div>
 </div>
 
