@@ -1,5 +1,152 @@
-﻿<h3>Create</h3>
+﻿@page "/Aportes/Create"
+@inject AportesService aportesService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+@using Imanol_Acosta_Ap1_P1.Models
+@using Imanol_Acosta_Ap1_P1.Services
+
+<PageTitle>Crear Aporte</PageTitle>
+
+<div class="container mt-3">
+    <div class="card shadow-lg">
+        <div class="card-header">
+            <h5 class="text-center">Crear Nuevo Aporte</h5>
+        </div>
+        <div class="card-body">
+            <EditForm Model="aporte" OnValidSubmit="Guardar">
+                <DataAnnotationsValidator />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>AporteID</strong></label>
+                        <InputNumber class="form-control" @bind-Value="aporte.AporteID" readonly />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Fecha</strong></label>
+                        <InputDate class="form-control" @bind-Value="aporte.Fecha" />
+                        <ValidationMessage For="@(() => aporte.Fecha)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="form-label"><strong>Nombres *</strong></label>
+                        <InputText class="form-control" @bind-Value="aporte.Nombres" placeholder="Ingrese el nombre completo" />
+                        <ValidationMessage For="@(() => aporte.Nombres)" />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Monto *</strong></label>
+                        <InputNumber class="form-control" @bind-Value="aporte.Monto" placeholder="0.00" />
+                        <ValidationMessage For="@(() => aporte.Monto)" />
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(mensaje))
+                {
+                    <div class="alert @(esExito ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+                        @mensaje
+                        <button type="button" class="btn-close" @onclick="LimpiarMensaje"></button>
+                    </div>
+                }
+
+                <div class="card-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary" @onclick="Volver">
+                        <span class="bi bi-arrow-left"></span> Volver
+                    </button>
+                    <button type="submit" class="btn btn-success" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        <span class="bi bi-save"></span> Guardar
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
 
 @code {
+    private Aporte aporte = new();
+    private string mensaje = string.Empty;
+    private bool esExito = false;
+    private bool guardando = false;
 
+    protected override void OnInitialized()
+    {
+        aporte = new Aporte
+            {
+                Fecha = DateTime.Now.Date,
+                Nombres = string.Empty,
+                Monto = 0
+            };
+    }
+
+    private async Task Guardar()
+    {
+        guardando = true;
+        mensaje = string.Empty;
+
+        try
+        {
+            if (await Validar())
+            {
+                var resultado = await aportesService.Guardar(aporte);
+
+                if (resultado)
+                {
+                    mensaje = "Aporte guardado exitosamente.";
+                    esExito = true;
+                    await Task.Delay(1500);
+                    navigationManager.NavigateTo("/Aportes/Index");
+                }
+                else
+                {
+                    mensaje = "Error al guardar el aporte.";
+                    esExito = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+            esExito = false;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task<bool> Validar()
+    {
+        if (string.IsNullOrWhiteSpace(aporte.Nombres))
+        {
+            mensaje = "El nombre es requerido.";
+            esExito = false;
+            return false;
+        }
+
+        if (aporte.Monto <= 0)
+        {
+            mensaje = "El monto debe ser mayor a cero.";
+            esExito = false;
+            return false;
+        }
+
+        return true;
+    }
+
+    private void LimpiarMensaje()
+    {
+        mensaje = string.Empty;
+    }
+
+    private void Volver()
+    {
+        navigationManager.NavigateTo("/Aportes/Index");
+    }
 }
