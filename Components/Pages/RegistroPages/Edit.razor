@@ -1,5 +1,273 @@
-﻿<h3>Edit</h3>
+﻿@page "/Aportes/Edit/{id:int}"
+@inject AportesService aportesService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+@using Imanol_Acosta_Ap1_P1.Models
+@using Imanol_Acosta_Ap1_P1.Services
+
+<PageTitle>Editar Aporte</PageTitle>
+
+<div class="container mt-3">
+    <div class="card shadow-lg">
+        <div class="card-header">
+            <h5 class="text-center">Editar Aporte</h5>
+        </div>
+        <div class="card-body">
+            @if (cargando)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p>Cargando aporte...</p>
+                </div>
+            }
+            else if (aporte == null)
+            {
+                <div class="alert alert-danger" role="alert">
+                    No se encontró el aporte solicitado.
+                </div>
+                <div class="text-center">
+                    <button type="button" class="btn btn-secondary" @onclick="Volver">
+                        <span class="bi bi-arrow-left"></span> Volver
+                    </button>
+                </div>
+            }
+            else
+            {
+                <EditForm Model="aporte" OnValidSubmit="Guardar">
+                    <DataAnnotationsValidator />
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label"><strong>AporteID</strong></label>
+                            <InputNumber class="form-control" @bind-Value="aporte.AporteID" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label"><strong>Fecha</strong></label>
+                            <InputDate class="form-control" @bind-Value="aporte.Fecha" />
+                            <ValidationMessage For="@(() => aporte.Fecha)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label"><strong>Nombres *</strong></label>
+                            <InputText class="form-control" @bind-Value="aporte.Nombres" placeholder="Ingrese el nombre completo" />
+                            <ValidationMessage For="@(() => aporte.Nombres)" />
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label"><strong>Monto *</strong></label>
+                            <InputNumber class="form-control" @bind-Value="aporte.Monto" placeholder="0.00" />
+                            <ValidationMessage For="@(() => aporte.Monto)" />
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(mensaje))
+                    {
+                        <div class="alert @(esExito ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+                            @mensaje
+                            <button type="button" class="btn-close" @onclick="LimpiarMensaje"></button>
+                        </div>
+                    }
+
+                    <div class="card-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-secondary" @onclick="Volver">
+                            <span class="bi bi-arrow-left"></span> Volver
+                        </button>
+                        <div>
+                            <button type="button" class="btn btn-danger me-2" @onclick="ConfirmarEliminar" disabled="@(guardando || eliminando)">
+                                @if (eliminando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <span class="bi bi-trash"></span> Eliminar
+                            </button>
+                            <button type="submit" class="btn btn-success" disabled="@(guardando || eliminando)">
+                                @if (guardando)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                }
+                                <span class="bi bi-save"></span> Guardar
+                            </button>
+                        </div>
+                    </div>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@if (mostrarModalEliminar)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Eliminación</h5>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro que desea eliminar este aporte?</p>
+                    <p><strong>ID:</strong> @aporte?.AporteID</p>
+                    <p><strong>Nombre:</strong> @aporte?.Nombres</p>
+                    <p><strong>Monto:</strong> @aporte?.Monto.ToString("N2")</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CancelarEliminar" disabled="@eliminando">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" @onclick="EliminarAporte" disabled="@eliminando">
+                        @if (eliminando)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        }
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
+    [Parameter] public int Id { get; set; }
 
+    private Aporte? aporte;
+    private string mensaje = string.Empty;
+    private bool esExito = false;
+    private bool guardando = false;
+    private bool cargando = true;
+    private bool eliminando = false;
+    private bool mostrarModalEliminar = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarAporte();
+    }
+
+    private async Task CargarAporte()
+    {
+        cargando = true;
+        try
+        {
+            var aportes = await aportesService.Listar(a => a.AporteID == Id);
+            aporte = aportes.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al cargar el aporte: {ex.Message}";
+            esExito = false;
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private async Task Guardar()
+    {
+        if (aporte == null) return;
+
+        guardando = true;
+        mensaje = string.Empty;
+
+        try
+        {
+            if (await Validar())
+            {
+                var resultado = await aportesService.Guardar(aporte);
+
+                if (resultado)
+                {
+                    mensaje = "Aporte actualizado exitosamente.";
+                    esExito = true;
+                    await Task.Delay(1500);
+                    navigationManager.NavigateTo("/Aportes/Index");
+                }
+                else
+                {
+                    mensaje = "Error al actualizar el aporte.";
+                    esExito = false;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error: {ex.Message}";
+            esExito = false;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task<bool> Validar()
+    {
+        if (aporte == null) return false;
+
+        if (string.IsNullOrWhiteSpace(aporte.Nombres))
+        {
+            mensaje = "El nombre es requerido.";
+            esExito = false;
+            return false;
+        }
+
+        if (aporte.Monto <= 0)
+        {
+            mensaje = "El monto debe ser mayor a cero.";
+            esExito = false;
+            return false;
+        }
+
+        return true;
+    }
+
+    private void ConfirmarEliminar()
+    {
+        mostrarModalEliminar = true;
+    }
+
+    private void CancelarEliminar()
+    {
+        mostrarModalEliminar = false;
+    }
+
+    private async Task EliminarAporte()
+    {
+        if (aporte == null) return;
+
+        eliminando = true;
+        try
+        {
+            mensaje = "Aporte eliminado exitosamente.";
+            esExito = true;
+            mostrarModalEliminar = false;
+            await Task.Delay(1500);
+            navigationManager.NavigateTo("/Aportes/Index");
+        }
+        catch (Exception ex)
+        {
+            mensaje = $"Error al eliminar: {ex.Message}";
+            esExito = false;
+            mostrarModalEliminar = false;
+        }
+        finally
+        {
+            eliminando = false;
+        }
+    }
+
+    private void LimpiarMensaje()
+    {
+        mensaje = string.Empty;
+    }
+
+    private void Volver()
+    {
+        navigationManager.NavigateTo("/Aportes/Index");
+    }
 }
