@@ -28,26 +28,26 @@
                         <button type="button" class="btn btn-primary" @onclick="Buscar">
                             <span class="bi bi-search"></span>
                         </button>
-                        <div class="col-4 text-end">
-                            <a href="/Aportes/Create" class="btn btn-success">
-                                <span class="bi bi-plus-square"></span> Crear
-                            </a>
-                        </div>
                     </div>
-                    
                 </div>
 
-                <div class="row mt-3">
-                    <div class="col-3">
-                        <label class="col-form-label"><strong>Desde</strong></label>
-                        <InputDate class="form-control" @bind-Value="Desde"></InputDate>
-                    </div>
+                <div class="col-4 text-end">
+                    <a href="/Aportes/Create" class="btn btn-success">
+                        <span class="bi bi-plus-square"></span> Crear
+                    </a>
+                </div>
+            </div>
 
-                    <div class="col-3">
-                        <label class="col-form-label"><strong>Hasta</strong></label>
-                        <div class="input-group">
-                            <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
-                        </div>
+            <div class="row mt-3">
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Desde</strong></label>
+                    <InputDate class="form-control" @bind-Value="Desde"></InputDate>
+                </div>
+
+                <div class="col-3">
+                    <label class="col-form-label"><strong>Hasta</strong></label>
+                    <div class="input-group">
+                        <InputDate class="form-control" @bind-Value="Hasta"></InputDate>
                     </div>
                 </div>
             </div>
@@ -71,9 +71,9 @@
                             <td>@aporte.Nombres</td>
                             <td>@aporte.Monto.ToString("N2")</td>
                             <td class="text-center">
-                            </td>
-                            <td class="text-center">
-                                <a class="btn btn-outline-primary bi bi-pencil-square" href="/Aportes/Edit/@aporte.AporteID"></a>
+                                <a class="btn btn-outline-primary btn-sm me-2" href="/Aportes/Edit/@aporte.AporteID" title="Editar">
+                                    <span class="bi bi-pencil-square"></span>
+                                </a>
                             </td>
                         </tr>
                     }
@@ -124,45 +124,8 @@
         }
     }
 
-    private async Task Restablecer()
-    {
-        ListaAportes = await aportesService.Listar(a => a.AporteID > 0);
-        Filtro = string.Empty;
-        ValorFiltro = string.Empty;
-        Desde = null;
-        Hasta = null;
-    }
 
-    private void ConfirmarEliminar(int id)
-    {
-        aporteIdEliminar = id;
-        mostrarModalEliminar = true;
-    }
+    
 
-    private void CancelarEliminar()
-    {
-        mostrarModalEliminar = false;
-        aporteIdEliminar = 0;
-    }
-
-    private async Task EliminarAporte()
-    {
-        try
-        {
-            var aporte = ListaAportes.FirstOrDefault(a => a.AporteID == aporteIdEliminar);
-            if (aporte != null)
-            {
-                ListaAportes.Remove(aporte);
-            }
-
-            mostrarModalEliminar = false;
-            aporteIdEliminar = 0;
-
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al eliminar: {ex.Message}");
-        }
-    }
+    
 }
