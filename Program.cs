@@ -1,10 +1,25 @@
 using Imanol_Acosta_Ap1_P1.Components;
+using Imanol_Acosta_Ap1_P1.DAL;
+using Microsoft.EntityFrameworkCore;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+
+builder.Services.AddRazorPages();
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+var Constr = builder.Configuration.GetConnectionString("ConStr");
+
+builder.Services.AddDbContextFactory<Contexto>(options =>
+    options.UseSqlServer(Constr));
+
+builder.Services.AddScoped<Imanol_Acosta_Ap1_P1.Services.AportesService>();
 
 var app = builder.Build();
 
